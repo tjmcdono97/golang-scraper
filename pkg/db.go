@@ -2,10 +2,11 @@ package pkg
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var sqliteDB = os.Getenv("SQLITE_DB")
@@ -84,8 +85,8 @@ func (r *Repository) FetchIDs() (map[string]bool, error) {
 	return ids, nil
 }
 
-// Insert adds a new record to the vehicle_list table in the SQL database.
-func (r *Repository) Insert(id, url string) error {
+// InsertAsset adds a new record to the vehicle_list table in the SQL database.
+func (r *Repository) InsertAsset(id, url string) error {
 	_, err := r.DB.Exec("INSERT INTO vehicle_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
 	if err != nil {
 		return err

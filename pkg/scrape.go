@@ -2,20 +2,21 @@ package pkg
 
 import (
 	"fmt"
-	"golang.org/x/net/html"
 	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
+	neturl "net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"golang.org/x/net/html"
 )
 
 // ScrapeURL makes an HTTP GET request to the specified URL, parses the HTML content,
 // finds all anchor tags, and returns a map of href values that have numbers 1-10 right before ".html".
 func ScrapeURL(url string) (map[string]string, error) {
-	scraperAPIURL, err := url.Parse("http://localhost:8080")
+	scraperAPIURL, err := neturl.Parse("http://localhost:8080")
 	if err != nil {
 		return nil, err
 	}
@@ -82,13 +83,17 @@ func PostListings(search string, assetList map[string]bool) []string {
 
 	for id, url := range listings {
 		if IsNewAsset(id, assetList) {
-			Insert(id, url)
+			InsertAsset(id, url)
 			links = append(links, url)
 		}
 	}
 
 	return links
 }
+
+// func InsertAsset(id, url string) {
+// 	panic("unimplemented")
+// }
 
 func randomSleep() {
 	rand.Seed(time.Now().UnixNano())

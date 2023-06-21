@@ -1,7 +1,7 @@
 package main
 
 import (
-	"craigslist.com/scraper/pkg"
+	"github.com/tjmcdono97/web-scraper/pkg"
 	"fmt"
 	"log"
 	"os"
