@@ -21,9 +21,9 @@ func ScrapeURL(url string) (map[string]string, error) {
 	}
 
 	query := scraperAPIURL.Query()
-	query.Set("url", "https://" + url)
+	query.Set("url", "https://"+url)
 	scraperAPIURL.RawQuery = query.Encode()
-	
+
 	log.Printf("Searching URL: %s", scraperAPIURL.String())
 
 	res, err := http.Get(scraperAPIURL.String())
@@ -69,7 +69,6 @@ func ScrapeURL(url string) (map[string]string, error) {
 	log.Printf("Found %v links", len(hrefs))
 	return hrefs, nil
 }
-
 
 // PostListings scrapes the listings for the specified search, checks if the assets/objects are new,
 // inserts them into the database, and returns a slice of the URLs of the new listings.

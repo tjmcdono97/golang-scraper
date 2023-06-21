@@ -2,10 +2,10 @@ package pkg
 
 import (
 	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
 	"time"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var sqliteDB = os.Getenv("SQLITE_DB")
@@ -30,7 +30,7 @@ func NewRepository() (*Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &Repository{DB: db}, nil
 }
 
