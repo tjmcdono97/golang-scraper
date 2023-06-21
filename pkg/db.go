@@ -1,115 +1,101 @@
-// The package name.
 package pkg
 
-// Importing the packages that are needed for the program to run.
 import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
-	"github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-const SQLITEDB = `D:\\GoCraigslist\\Craigslist.db`
+var sqliteDB = os.Getenv("SQLITE_DB")
 
-// constant query string to select from searches table
-const select_query string = `
+const selectQuery = `
 	SELECT 
-	  c.city || s.search_string 
+		c.city || s.search_string 
 	FROM
-	searches s,
-	cities c
+		searches s,
+		cities c
 `
 
-// It opens a database connection, queries the database for all rows in the searches table, and returns
-// a slice of Search structs.
-func FetchSearches() []string {
-	db, err := sql.Open("sqlite3", SQLITEDB)
-	fmt.Print(sqlite3.SQLITE_TEXT)
+// FetchData opens a database connection, queries the database for all rows, and returns
+// a slice of strings.
+func FetchData() []string {
+	db, err := sql.Open("sqlite3", sqliteDB)
 	if err != nil {
-		fmt.Print(err)
+		log.Fatal(err)
 	}
-
-	searches := []string{}
-
 	defer db.Close()
 
-	rows, err := db.Query(select_query)
+	data := make([]string, 0)
 
+	rows, err := db.Query(selectQuery)
 	if err != nil {
-		fmt.Print(err)
+		log.Fatal(err)
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
-
-		var search_string string
-
-		err = rows.Scan(&search_string)
-
-		searches = append(searches, search_string)
-
-		if err != nil {
-			fmt.Print(err)
+		var value string
+		if err := rows.Scan(&value); err != nil {
+			log.Fatal(err)
 		}
+		data = append(data, value)
 	}
-	return searches
+
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return data
 }
 
-// FetchVehicleList() returns a map of strings to booleans. The map is populated with the id's of all
-// the vehicles in the database
-func FetchVehicleList() map[string]bool {
-	db, err := sql.Open("sqlite3", SQLITEDB)
-	ids := map[string]bool{}
-	fmt.Print(sqlite3.SQLITE_TEXT)
+// FetchIDs returns a map of IDs. The map is populated with the IDs of all
+// the records in the database.
+func FetchIDs() map[string]bool {
+	db, err := sql.Open("sqlite3", sqliteDB)
 	if err != nil {
-		fmt.Print(err)
+		log.Fatal(err)
 	}
-
 	defer db.Close()
 
+	ids := make(map[string]bool)
+
 	rows, err := db.Query("SELECT id FROM vehicle_list")
-
 	if err != nil {
-		fmt.Print(err)
+		log.Fatal(err)
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
-
 		var id string
-
-		err = rows.Scan(&id)
-
-		ids[id] = true
-
-		if err != nil {
-			fmt.Print(err)
+		if err := rows.Scan(&id); err != nil {
+			log.Fatal(err)
 		}
-
+		ids[id] = true
 	}
+
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
 	return ids
 }
 
-// Inserts the id and url into the vehicle_list table
-func Insert(id string, url string) {
-
-	db, err := sql.Open("sqlite3", SQLITEDB)
-
+// Insert inserts the ID and URL into the vehicle_list table.
+func Insert(id, url string) {
+	db, err := sql.Open("sqlite3", sqliteDB)
 	if err != nil {
-		fmt.Printf("%s", err)
+		log.Fatal(err)
 	}
-
 	defer db.Close()
-	_, err = db.Exec(`INSERT INTO vehicle_list(id,url,posting_time) VALUES(?,?,?)`, id, url, time.Now())
-	if err != nil {
-		fmt.Printf("%s", err)
 
-	} else {
-		log.Printf("%s placed into vehicle_list", url)
+	_, err = db.Exec("INSERT INTO vehicle_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	log.Printf("%s placed into vehicle_list", url)
 }
