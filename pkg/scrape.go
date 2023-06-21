@@ -81,9 +81,19 @@ func PostListings(search string, assetList map[string]bool) []string {
 		fmt.Print(err)
 	}
 
+	repo, err := NewRepository()
+	if err != nil {
+		fmt.Println(err)
+		return links
+	}
+
 	for id, url := range listings {
 		if IsNewAsset(id, assetList) {
-			InsertAsset(id, url)
+			err := repo.InsertAsset(id, url)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
 			links = append(links, url)
 		}
 	}
@@ -91,9 +101,6 @@ func PostListings(search string, assetList map[string]bool) []string {
 	return links
 }
 
-// func InsertAsset(id, url string) {
-// 	panic("unimplemented")
-// }
 
 func randomSleep() {
 	rand.Seed(time.Now().UnixNano())
