@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"os"
 )
 
 // setupLogs creates a log file with a timestamp in the name and sets the log output to that file.
 func setupLogs() {
 	const layout = "2006_01_02_15_04_05"
 	t := time.Now().Format(layout)
-	logFileName := fmt.Sprintf("D:\\GoCraigslist\\logs\\%s.log", t)
+	logFilePath := os.Getenv("LOG_FILE_PATH")
+	logFileName := fmt.Sprintf("%s\\logs\\%s.log", logFilePath, t)
 	logFile, err := pkg.OpenLogFile(logFileName)
 	if err != nil {
 		log.Fatal(err)
@@ -23,8 +25,23 @@ func setupLogs() {
 func main() {
 	setupLogs()
 
-	searchList := pkg.FetchData()
-	vehicleList := pkg.FetchIDs()
+	// Creating a new repository
+	repo, err := pkg.NewRepository()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Fetching data
+	searchList, err := repo.FetchData()
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	// Fetching IDs
+	vehicleList, err := repo.FetchIDs()
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("Checking %v links", len(searchList))
 
 	var links []string

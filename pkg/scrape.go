@@ -2,22 +2,31 @@ package pkg
 
 import (
 	"fmt"
+	"golang.org/x/net/html"
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
-
-	"golang.org/x/net/html"
 )
 
 // ScrapeURL makes an HTTP GET request to the specified URL, parses the HTML content,
 // finds all anchor tags, and returns a map of href values that have numbers 1-10 right before ".html".
 func ScrapeURL(url string) (map[string]string, error) {
-	scraperAPIURL := fmt.Sprintf("http://localhost:8080/?url=https://%s", url)
-	log.Printf("Searching URL: %s", scraperAPIURL)
-	res, err := http.Get(scraperAPIURL)
+	scraperAPIURL, err := url.Parse("http://localhost:8080")
+	if err != nil {
+		return nil, err
+	}
+
+	query := scraperAPIURL.Query()
+	query.Set("url", "https://" + url)
+	scraperAPIURL.RawQuery = query.Encode()
+	
+	log.Printf("Searching URL: %s", scraperAPIURL.String())
+
+	res, err := http.Get(scraperAPIURL.String())
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +69,7 @@ func ScrapeURL(url string) (map[string]string, error) {
 	log.Printf("Found %v links", len(hrefs))
 	return hrefs, nil
 }
+
 
 // PostListings scrapes the listings for the specified search, checks if the assets/objects are new,
 // inserts them into the database, and returns a slice of the URLs of the new listings.

@@ -2,11 +2,9 @@ package pkg
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"time"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -20,82 +18,79 @@ const selectQuery = `
 		cities c
 `
 
-// FetchData opens a database connection, queries the database for all rows, and returns
-// a slice of strings.
-func FetchData() []string {
+// Repository is a type that holds a pointer to a SQL database.
+type Repository struct {
+	DB *sql.DB
+}
+
+// NewRepository creates and returns a new instance of Repository,
+// which holds a pointer to a new SQL database connection.
+func NewRepository() (*Repository, error) {
 	db, err := sql.Open("sqlite3", sqliteDB)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	defer db.Close()
+	
+	return &Repository{DB: db}, nil
+}
 
+// FetchData retrieves data from a SQL database, and returns it as a slice of strings.
+func (r *Repository) FetchData() ([]string, error) {
 	data := make([]string, 0)
 
-	rows, err := db.Query(selectQuery)
+	rows, err := r.DB.Query(selectQuery)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var value string
 		if err := rows.Scan(&value); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		data = append(data, value)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return data
+	return data, nil
 }
 
-// FetchIDs returns a map of IDs. The map is populated with the IDs of all
-// the records in the database.
-func FetchIDs() map[string]bool {
-	db, err := sql.Open("sqlite3", sqliteDB)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
+// FetchIDs retrieves IDs from a SQL database, and returns them as a map of strings to booleans.
+func (r *Repository) FetchIDs() (map[string]bool, error) {
 	ids := make(map[string]bool)
 
-	rows, err := db.Query("SELECT id FROM vehicle_list")
+	rows, err := r.DB.Query("SELECT id FROM vehicle_list")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		ids[id] = true
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return ids
+	return ids, nil
 }
 
-// Insert inserts the ID and URL into the vehicle_list table.
-func Insert(id, url string) {
-	db, err := sql.Open("sqlite3", sqliteDB)
+// Insert adds a new record to the vehicle_list table in the SQL database.
+func (r *Repository) Insert(id, url string) error {
+	_, err := r.DB.Exec("INSERT INTO vehicle_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
 	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec("INSERT INTO vehicle_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
-	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Printf("%s placed into vehicle_list", url)
+	return nil
 }
