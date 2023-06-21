@@ -95,4 +95,3 @@ func (r *Repository) InsertAsset(id, url string) error {
 	log.Printf("%s placed into vehicle_list", url)
 	return nil
 }
-

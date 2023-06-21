@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/tjmcdono97/web-scraper/pkg"
 	"fmt"
+	"github.com/tjmcdono97/web-scraper/pkg"
 	"log"
 	"os"
 	"time"

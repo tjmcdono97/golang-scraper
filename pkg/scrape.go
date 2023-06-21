@@ -101,7 +101,6 @@ func PostListings(search string, assetList map[string]bool) []string {
 	return links
 }
 
-
 func randomSleep() {
 	rand.Seed(time.Now().UnixNano())
 	n := rand.Intn(40)
