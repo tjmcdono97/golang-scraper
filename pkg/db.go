@@ -1,115 +1,96 @@
-// The package name.
 package pkg
 
-// Importing the packages that are needed for the program to run.
 import (
 	"database/sql"
-	"fmt"
 	"log"
+	"os"
 	"time"
-
-	"github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-const SQLITEDB = `D:\\GoCraigslist\\Craigslist.db`
+var sqliteDB = os.Getenv("SQLITE_DB")
 
-// constant query string to select from searches table
-const select_query string = `
+const selectQuery = `
 	SELECT 
-	  c.city || s.search_string 
+		c.city || s.search_string 
 	FROM
-	searches s,
-	cities c
+		searches s,
+		cities c
 `
 
-// It opens a database connection, queries the database for all rows in the searches table, and returns
-// a slice of Search structs.
-func FetchSearches() []string {
-	db, err := sql.Open("sqlite3", SQLITEDB)
-	fmt.Print(sqlite3.SQLITE_TEXT)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	searches := []string{}
-
-	defer db.Close()
-
-	rows, err := db.Query(select_query)
-
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	defer rows.Close()
-
-	for rows.Next() {
-
-		var search_string string
-
-		err = rows.Scan(&search_string)
-
-		searches = append(searches, search_string)
-
-		if err != nil {
-			fmt.Print(err)
-		}
-	}
-	return searches
+// Repository is a type that holds a pointer to a SQL database.
+type Repository struct {
+	DB *sql.DB
 }
 
-// FetchVehicleList() returns a map of strings to booleans. The map is populated with the id's of all
-// the vehicles in the database
-func FetchVehicleList() map[string]bool {
-	db, err := sql.Open("sqlite3", SQLITEDB)
-	ids := map[string]bool{}
-	fmt.Print(sqlite3.SQLITE_TEXT)
+// NewRepository creates and returns a new instance of Repository,
+// which holds a pointer to a new SQL database connection.
+func NewRepository() (*Repository, error) {
+	db, err := sql.Open("sqlite3", sqliteDB)
 	if err != nil {
-		fmt.Print(err)
+		return nil, err
 	}
+	
+	return &Repository{DB: db}, nil
+}
 
-	defer db.Close()
+// FetchData retrieves data from a SQL database, and returns it as a slice of strings.
+func (r *Repository) FetchData() ([]string, error) {
+	data := make([]string, 0)
 
-	rows, err := db.Query("SELECT id FROM vehicle_list")
-
+	rows, err := r.DB.Query(selectQuery)
 	if err != nil {
-		fmt.Print(err)
+		return nil, err
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
+		var value string
+		if err := rows.Scan(&value); err != nil {
+			return nil, err
+		}
+		data = append(data, value)
+	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// FetchIDs retrieves IDs from a SQL database, and returns them as a map of strings to booleans.
+func (r *Repository) FetchIDs() (map[string]bool, error) {
+	ids := make(map[string]bool)
+
+	rows, err := r.DB.Query("SELECT id FROM vehicle_list")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
 		var id string
-
-		err = rows.Scan(&id)
-
-		ids[id] = true
-
-		if err != nil {
-			fmt.Print(err)
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
 		}
-
+		ids[id] = true
 	}
-	return ids
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return ids, nil
 }
 
-// Inserts the id and url into the vehicle_list table
-func Insert(id string, url string) {
-
-	db, err := sql.Open("sqlite3", SQLITEDB)
-
+// Insert adds a new record to the vehicle_list table in the SQL database.
+func (r *Repository) Insert(id, url string) error {
+	_, err := r.DB.Exec("INSERT INTO vehicle_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
 	if err != nil {
-		fmt.Printf("%s", err)
+		return err
 	}
 
-	defer db.Close()
-	_, err = db.Exec(`INSERT INTO vehicle_list(id,url,posting_time) VALUES(?,?,?)`, id, url, time.Now())
-	if err != nil {
-		fmt.Printf("%s", err)
-
-	} else {
-		log.Printf("%s placed into vehicle_list", url)
-	}
-
+	log.Printf("%s placed into vehicle_list", url)
+	return nil
 }
