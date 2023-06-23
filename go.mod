@@ -1,4 +1,4 @@
-module craigslist.com/scraper
+module github.com/tjmcdono97/web-scraper
 
 go 1.19
 

@@ -1,10 +1,10 @@
 package pkg
 
 import (
-	"log"
-	"os"
 	twilio "github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
+	"log"
+	"os"
 )
 
 // SendMessage sends a text message with the specified text content.
@@ -49,4 +49,3 @@ func sendSMS(text, logMessage string) error {
 	log.Println("SMS sent successfully!")
 	return nil
 }
-
