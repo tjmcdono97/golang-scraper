@@ -1,11 +1,11 @@
 package main
 
 import (
+	"craigslist.com/scraper/pkg"
 	"fmt"
-	"github.com/tjmcdono97/web-scraper/pkg"
 	"log"
-	"os"
 	"time"
+	"os"
 )
 
 // setupLogs creates a log file with a timestamp in the name and sets the log output to that file.
@@ -36,7 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	// Fetching IDs
 	vehicleList, err := repo.FetchIDs()
 	if err != nil {
