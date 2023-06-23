@@ -2,29 +2,28 @@ package pkg
 
 import (
 	"fmt"
+	"golang.org/x/net/html"
 	"log"
 	"math/rand"
 	"net/http"
-	neturl "net/url"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
-
-	"golang.org/x/net/html"
 )
 
 // ScrapeURL makes an HTTP GET request to the specified URL, parses the HTML content,
 // finds all anchor tags, and returns a map of href values that have numbers 1-10 right before ".html".
 func ScrapeURL(url string) (map[string]string, error) {
-	scraperAPIURL, err := neturl.Parse("http://localhost:8080")
+	scraperAPIURL, err := url.Parse("http://localhost:8080")
 	if err != nil {
 		return nil, err
 	}
 
 	query := scraperAPIURL.Query()
-	query.Set("url", "https://"+url)
+	query.Set("url", "https://" + url)
 	scraperAPIURL.RawQuery = query.Encode()
-
+	
 	log.Printf("Searching URL: %s", scraperAPIURL.String())
 
 	res, err := http.Get(scraperAPIURL.String())
@@ -71,6 +70,7 @@ func ScrapeURL(url string) (map[string]string, error) {
 	return hrefs, nil
 }
 
+
 // PostListings scrapes the listings for the specified search, checks if the assets/objects are new,
 // inserts them into the database, and returns a slice of the URLs of the new listings.
 func PostListings(search string, assetList map[string]bool) []string {
@@ -81,19 +81,9 @@ func PostListings(search string, assetList map[string]bool) []string {
 		fmt.Print(err)
 	}
 
-	repo, err := NewRepository()
-	if err != nil {
-		fmt.Println(err)
-		return links
-	}
-
 	for id, url := range listings {
 		if IsNewAsset(id, assetList) {
-			err := repo.InsertAsset(id, url)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
+			Insert(id, url)
 			links = append(links, url)
 		}
 	}
