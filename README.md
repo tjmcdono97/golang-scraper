@@ -22,6 +22,8 @@ The project uses the following environment variables:
 - `RECIPIENT_PHONE_NUMBER`: The phone number to which alerts are sent
 - `TWILIO_PHONE_NUMBER`: The phone number from which alerts are sent
 - `SQLITE_DB`: The path to your SQLite database
+- `SELECT_QUERY`: Query used to scan previously viewed urls
+
 
 You can set these in your shell, or directly in your code for testing purposes. For production use, it's recommended to use a secure method for setting your environment variables.
 

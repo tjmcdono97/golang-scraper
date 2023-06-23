@@ -10,13 +10,7 @@ import (
 
 var sqliteDB = os.Getenv("SQLITE_DB")
 
-const selectQuery = `
-	SELECT 
-		c.city || s.search_string 
-	FROM
-		searches s,
-		cities c
-`
+var selectQuery = os.Getenv("SELECT_QUERY")
 
 // Repository is a type that holds a pointer to a SQL database.
 type Repository struct {
@@ -86,7 +80,7 @@ func (r *Repository) FetchIDs() (map[string]bool, error) {
 
 // Insert adds a new record to the vehicle_list table in the SQL database.
 func (r *Repository) Insert(id, url string) error {
-	_, err := r.DB.Exec("INSERT INTO vehicle_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
+	_, err := r.DB.Exec("INSERT INTO asset_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
 	if err != nil {
 		return err
 	}
