@@ -12,19 +12,19 @@ import (
 	"time"
 )
 
-// ScrapeURL makes an HTTP GET request to the specified URL, parses the HTML content,
+// ScrapeURL makes an HTTP GET request to the specified urlStr, parses the HTML content,
 // finds all anchor tags, and returns a map of href values that have numbers 1-10 right before ".html".
-func ScrapeURL(url string) (map[string]string, error) {
+func ScrapeURL(urlStr string) (map[string]string, error) {
 	scraperAPIURL, err := url.Parse("http://localhost:8080")
 	if err != nil {
 		return nil, err
 	}
 
 	query := scraperAPIURL.Query()
-	query.Set("url", "https://" + url)
+	query.Set("url", "https://" + urlStr)
 	scraperAPIURL.RawQuery = query.Encode()
 	
-	log.Printf("Searching URL: %s", scraperAPIURL.String())
+	log.Printf("Searching urlStr: %s", scraperAPIURL.String())
 
 	res, err := http.Get(scraperAPIURL.String())
 	if err != nil {
@@ -73,7 +73,7 @@ func ScrapeURL(url string) (map[string]string, error) {
 
 // PostListings scrapes the listings for the specified search, checks if the assets/objects are new,
 // inserts them into the database, and returns a slice of the URLs of the new listings.
-func PostListings(search string, assetList map[string]bool) []string {
+func PostListings(search string, assetList map[string]bool,  repo *Repository) []string {
 	var links []string
 	listings, err := ScrapeURL(search)
 	randomSleep()
@@ -81,10 +81,10 @@ func PostListings(search string, assetList map[string]bool) []string {
 		fmt.Print(err)
 	}
 
-	for id, url := range listings {
-		if IsNewAsset(id, assetList) {
-			Insert(id, url)
-			links = append(links, url)
+	for id, urlStr := range listings {
+		if IsNewAsset(id, assetList,  repo) {
+			repo.Insert(id, urlStr)
+			links = append(links, urlStr)
 		}
 	}
 
@@ -101,7 +101,7 @@ func randomSleep() {
 
 // IsNewAsset checks if the asset/object with the specified ID exists in the database (assetList).
 // It returns true if it's a new asset/object or false if it already exists.
-func IsNewAsset(id string, assetList map[string]bool) bool {
+func IsNewAsset(id string, assetList map[string]bool,  repo *Repository) bool {
 	if assetList[id] {
 		log.Printf("%s already exists in the database", id)
 		return false

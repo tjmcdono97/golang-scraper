@@ -10,13 +10,7 @@ import (
 
 var sqliteDB = os.Getenv("SQLITE_DB")
 
-const selectQuery = `
-	SELECT 
-		c.city || s.search_string 
-	FROM
-		searches s,
-		cities c
-`
+var selectQuery = os.Getenv("SELECT_QUERY")
 
 // Repository is a type that holds a pointer to a SQL database.
 type Repository struct {
