@@ -80,7 +80,7 @@ func (r *Repository) FetchIDs() (map[string]bool, error) {
 
 // Insert adds a new record to the vehicle_list table in the SQL database.
 func (r *Repository) Insert(id, url string) error {
-	_, err := r.DB.Exec("INSERT INTO asset_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
+	_, err := r.DB.Exec("INSERT INTO vehicle_list (id, url, posting_time) VALUES (?, ?, ?)", id, url, time.Now())
 	if err != nil {
 		return err
 	}
