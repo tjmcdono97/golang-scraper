@@ -48,7 +48,7 @@ func main() {
 
 	for _, search := range searchList {
 		log.Printf("Checking URL: %s", search)
-		searchLinks := pkg.PostListings(search, vehicleList)
+		searchLinks := pkg.PostListings(search, vehicleList, repo)
 		links = append(links, searchLinks...)
 	}
 
