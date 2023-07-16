@@ -17,3 +17,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - SQLite database for storing scraped data.
 - Environment variable support for sensitive information.
 - Twilio API integration for sending SMS alerts.
+- Added a Dockerfile for convience on needing a gcc+ compiler.
+- Added Dockerignore
+- Updated README.md
