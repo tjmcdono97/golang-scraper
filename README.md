@@ -31,9 +31,19 @@ You can set these in your shell, or directly in your code for testing purposes. 
 
 Navigate to the directory containing the project and run:
 
+#### Running Locally
+
+You must have a gcc+ compiler installed in order to run this locally. this is taken care of if you go with the Docker build option
 ```bash
 go run main.go
 ```
+
+## Running With Docker
+```bash
+docker build --tag godockerscraper .
+```
+
+We can then use `docker run -d godockerscraper -e <all env variables here>` to run the application on a container.
 
 ### Project Structure
 
@@ -43,3 +53,4 @@ go run main.go
     - log.go: Provides functionality for opening and managing log files.
     - sms.go: This file manages sending SMS alerts via the Twilio API.
     - scrape.go: This file contains functions to scrape data from URLs.
+
