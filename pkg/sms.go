@@ -1,26 +1,22 @@
 package pkg
 
 import (
-	"log"
-	"os"
 	twilio "github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
+	"os"
+
+	"go.uber.org/zap"
 )
 
-// SendMessage sends a text message with the specified text content.
-// It uses the Twilio API to send the message.
-func SendMessage(text string) error {
-	return sendSMS(text, "Sending SMS: %s")
+func SendMessage(text string, logger *zap.Logger) error {
+	return sendSMS(text, "Sending SMS", logger)
 }
 
-// Alert sends an alert message notifying that user received a post.
-// It uses the Twilio API to send the message.
-func Alert() error {
-	return sendSMS("Received a new post", "Sending alert SMS: received a post")
+func Alert(logger *zap.Logger) error {
+	return sendSMS("Received a new post", "Sending alert SMS: received a post", logger)
 }
 
-func sendSMS(text, logMessage string) error {
-	// removed duplicate code to a separate function
+func sendSMS(text, logMessage string, logger *zap.Logger) error {
 	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
 	apiSid := os.Getenv("TWILIO_SID")
 	apiSecret := os.Getenv("TWILIO_SECRET")
@@ -38,15 +34,14 @@ func sendSMS(text, logMessage string) error {
 	params.SetFrom(from)
 	params.SetBody(text)
 
-	log.Printf(logMessage, text)
+	logger.Info(logMessage, zap.String("Message", text))
 
 	_, err := client.Api.CreateMessage(params)
 	if err != nil {
-		log.Printf("Error sending SMS: %v", err)
+		logger.Error("Error sending SMS", zap.Error(err))
 		return err
 	}
 
-	log.Println("SMS sent successfully!")
+	logger.Info("SMS sent successfully!")
 	return nil
 }
-

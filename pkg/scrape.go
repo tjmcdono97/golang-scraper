@@ -1,30 +1,28 @@
 package pkg
 
 import (
-	"fmt"
 	"golang.org/x/net/html"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
 )
 
-// ScrapeURL makes an HTTP GET request to the specified urlStr, parses the HTML content,
-// finds all anchor tags, and returns a map of href values that have numbers 1-10 right before ".html".
-func ScrapeURL(urlStr string) (map[string]string, error) {
-	scraperAPIURL, err := url.Parse("http://localhost:8080")
+func ScrapeURL(urlStr string, logger *zap.Logger) (map[string]string, error) {
+	scraperAPIURL, err := url.Parse("http://localhost:8000/")
 	if err != nil {
 		return nil, err
 	}
 
 	query := scraperAPIURL.Query()
-	query.Set("url", "https://" + urlStr)
+	query.Set("url", "https://"+urlStr)
 	scraperAPIURL.RawQuery = query.Encode()
-	
-	log.Printf("Searching urlStr: %s", scraperAPIURL.String())
+
+	logger.Info("Searching urlStr", zap.String("URL", scraperAPIURL.String()))
 
 	res, err := http.Get(scraperAPIURL.String())
 	if err != nil {
@@ -47,7 +45,7 @@ func ScrapeURL(urlStr string) (map[string]string, error) {
 				if a.Key == "href" {
 					r, err := regexp.Compile(pattern)
 					if err != nil {
-						fmt.Println(err)
+						logger.Error("Error compiling regex", zap.Error(err))
 						return
 					}
 					if r.MatchString(a.Val) {
@@ -66,23 +64,20 @@ func ScrapeURL(urlStr string) (map[string]string, error) {
 	}
 	f(doc)
 
-	log.Printf("Found %v links", len(hrefs))
+	logger.Info("Found links", zap.Int("Count", len(hrefs)))
 	return hrefs, nil
 }
 
-
-// PostListings scrapes the listings for the specified search, checks if the assets/objects are new,
-// inserts them into the database, and returns a slice of the URLs of the new listings.
-func PostListings(search string, assetList map[string]bool,  repo *Repository) []string {
+func PostListings(search string, assetList map[string]bool, repo *Repository, logger *zap.Logger) []string {
 	var links []string
-	listings, err := ScrapeURL(search)
-	randomSleep()
+	listings, err := ScrapeURL(search, logger)
+	randomSleep(logger)
 	if err != nil {
-		fmt.Print(err)
+		logger.Error("Error scraping URL", zap.Error(err))
 	}
 
 	for id, urlStr := range listings {
-		if IsNewAsset(id, assetList,  repo) {
+		if IsNewAsset(id, assetList, repo, logger) {
 			repo.Insert(id, urlStr)
 			links = append(links, urlStr)
 		}
@@ -91,19 +86,17 @@ func PostListings(search string, assetList map[string]bool,  repo *Repository) [
 	return links
 }
 
-func randomSleep() {
+func randomSleep(logger *zap.Logger) {
 	rand.Seed(time.Now().UnixNano())
 	n := rand.Intn(40)
-	fmt.Printf("Sleeping %d seconds...\n", n)
+	logger.Info("Sleeping", zap.Int("Seconds", n))
 	time.Sleep(time.Duration(n) * time.Second)
-	fmt.Println("Done")
+	logger.Info("Done sleeping")
 }
 
-// IsNewAsset checks if the asset/object with the specified ID exists in the database (assetList).
-// It returns true if it's a new asset/object or false if it already exists.
-func IsNewAsset(id string, assetList map[string]bool,  repo *Repository) bool {
+func IsNewAsset(id string, assetList map[string]bool, repo *Repository, logger *zap.Logger) bool {
 	if assetList[id] {
-		log.Printf("%s already exists in the database", id)
+		logger.Info("Asset already exists in the database", zap.String("ID", id))
 		return false
 	}
 	return true
