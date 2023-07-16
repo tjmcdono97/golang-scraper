@@ -38,7 +38,7 @@ You must have a gcc+ compiler installed in order to run this locally. this is ta
 go run main.go
 ```
 
-## Running With Docker
+#### Running With Docker
 ```bash
 docker build --tag godockerscraper .
 ```
